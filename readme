@@ -1,0 +1,24 @@
+Sample application using HATEOAS approach.
+
+Application depicts:
+- hypermedia support
+- service versioning using VND
+- XML/JSON content representation (any representation can be attached easily)
+- server-side approach to testing of service API:
+    test are written using mock MVC thus they are pretty slow.
+    Normally such tests should be placed in separate package with integration/functional tests.
+    However for demo purposes they have been placed here with code of the services
+    instead of unit tests which would enable to achieve similar results with minor effort (with the usage of mocks).
+
+Usage:
+1) run.sh: script builds package and runs local server
+2) deploy-war.sh: script deploys war package to Tomcat server (CATALINA_HOME variable must be set)
+3) demo.sh: script sends sample requests to local server using different versions of services.
+    All messages are exchanged using JSON.
+    Note: local server (run.sh) must be up and running before running this script.
+4) demo-xml.sh: script sends sample requests to local server using different versions of services.
+    All messages are exchanged using XML.
+    Note: local server (run.sh) must be up and running before running this script.
+
+
+
