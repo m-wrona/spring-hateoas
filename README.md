@@ -1,13 +1,15 @@
-# REST - HATEOAS
+# REST - HATEOAS [![Circle CI](https://circleci.com/gh/m-wrona/spring-hateoas.svg?style=svg)](https://circleci.com/gh/m-wrona/spring-hateoas)
 
 Sample REST application using HATEOAS approach.
 
 Application depicts:
+- REST API
 - hypermedia support
 - service versioning using VND
 - XML/JSON content representation (any representation can be attached easily)
 - server-side approach to testing of service API:
-    test are written using mock MVC thus they are pretty slow.
+
+    Test are written using mock MVC thus they are pretty slow.
     Normally such tests should be placed in separate package with integration/functional tests.
     However for demo purposes they have been placed here with code of the services
     instead of unit tests which would enable to achieve similar results with minor effort (with the usage of mocks).
@@ -29,18 +31,12 @@ deploy-war.sh
 3) Sends sample requests to local server using different versions of services.
 
 ```
-# use JSON for message representation
 demo.sh
-```
-
-```
-# use XML for message representation
-demo-xml.sh
 ```
 
 ***Note: local server (run.sh) must be up and running before running this script.***
 
-## Sample
+## Samples
 
 1) Create message:
 
@@ -52,13 +48,18 @@ Server: Apache-Coyote/1.1
 Content-Type: application/vnd.messages-v1+json
 Transfer-Encoding: chunked
 
-{"entityId":"258c916d-143f-48cb-97ef-f1861e231e70","links":[{"rel":"self","href":"http://localhost:8080/message/258c916d-143f-48cb-97ef-f1861e231e70"}]}
+{
+  "entityId":"258c916d-143f-48cb-97ef-f1861e231e70",
+  "links":[
+    {"rel":"self","href":"http://localhost:8080/message/258c916d-143f-48cb-97ef-f1861e231e70"}
+  ]
+}
 ```
 
-2) Get first page of messages (supported in both V1 and V2 of services)
+2) Get chosen page of messages (supported in both V1 and V2 of services)
 
 ```
-curl -i -G -H 'Accept: application/vnd.messages-v1+json' -H 'Content-type: application/json'  http://localhost:8080/messages/1
+curl -i -G -H 'Accept: application/vnd.messages-v1+json' -H 'Content-type: application/json'  http://localhost:8080/messages/2
 
 HTTP/1.1 200 OK
 Server: Apache-Coyote/1.1
@@ -71,14 +72,18 @@ Transfer-Encoding: chunked
   {"entityId":"ea8eb940-a015-416f-b2db-484e68e830e3","title":"'message 2'","links":[{"rel":"self","href":"http://localhost:8080/message/ea8eb940-a015-416f-b2db-484e68e830e3"}]},
   {"entityId":"258c916d-143f-48cb-97ef-f1861e231e70","title":"'message 1'","links":[{"rel":"self","href":"http://localhost:8080/message/258c916d-143f-48cb-97ef-f1861e231e70"}]}
  ],
- "links":[{"rel":"self","href":"http://localhost:8080/messages/1?includeFields="}]
+ "links":[
+    {"rel":"self","href":"http://localhost:8080/messages/2?includeFields=content"},
+    {"rel":"next","href":"http://localhost:8080/messages/3?includeFields=content"},
+    {"rel":"prev","href":"http://localhost:8080/messages/1?includeFields=content"}
+ ]
 }
 ```
 
-3) Get first page of messages with chosen fields (supported only in V2 of service)
+3) Get chosen page of messages with chosen fields (supported only in V2 of service)
 
 ```
-curl -i -G -H 'Accept: application/vnd.messages-v2+json' -H 'Content-type: application/json' -d "includeFields=content"  http://localhost:8080/messages/1
+curl -i -G -H 'Accept: application/vnd.messages-v2+json' -H 'Content-type: application/json' -d "includeFields=content"  http://localhost:8080/messages/2
 
 HTTP/1.1 200 OK
 Server: Apache-Coyote/1.1
@@ -93,7 +98,7 @@ Transfer-Encoding: chunked
   ],
   "links":[
     {"rel":"self","href":"http://localhost:8080/messages/2?includeFields=content"},
-    {"rel":"next","href":"http://localhost:8080/messages/3?includeFields=content"}
+    {"rel":"next","href":"http://localhost:8080/messages/3?includeFields=content"},
     {"rel":"prev","href":"http://localhost:8080/messages/1?includeFields=content"}
   ]
 }
