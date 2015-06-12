@@ -1,5 +1,6 @@
 package com.mwronski.hateoas.services;
 
+import com.mwronski.hateoas.model.Message;
 import com.mwronski.hateoas.model.ResourceEntity;
 import com.mwronski.hateoas.model.Resources;
 import com.mwronski.hateoas.repositories.Repository;
@@ -9,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.mwronski.hateoas.log.Tracer.tracer;
@@ -24,7 +27,7 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
  * @author Michal Wronski
  * @date 5/30/14.
  */
-@RequestMapping(value = "/messages")
+@RequestMapping(value = "/")
 @RestController
 public abstract class ReadService<T extends ResourceEntity> {
 
@@ -36,7 +39,7 @@ public abstract class ReadService<T extends ResourceEntity> {
      * @param id of element to be found
      * @return found instance, null otherwise
      */
-    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    @RequestMapping(value = "/message/{id}", method = RequestMethod.GET)
     @ResponseBody
     public HttpEntity<T> find(@PathVariable String id) {
         tracer(this).info("Find element - id: %s", id);
@@ -48,21 +51,37 @@ public abstract class ReadService<T extends ResourceEntity> {
     /**
      * Get elements
      *
-     * @param pageNumber number of page with elements to be displayed
+     * @param pageNumber    number of page with elements to be displayed
+     * @param includeFields fields to be included in results (optional - may not be supported by each version of service)
      * @return non-nullable instance of resources with found elements
      */
-    @RequestMapping(value = "/list/{pageNumber}", method = RequestMethod.GET)
+    @RequestMapping(value = "/messages/{pageNumber}", method = RequestMethod.GET)
     @ResponseBody
-    public HttpEntity<Resources<T>> get(@PathVariable int pageNumber) {
+    public HttpEntity<Resources<T>> get(
+            @PathVariable int pageNumber,
+            @RequestParam(required = false) String... includeFields
+    ) {
         tracer(this).info("Getting elements - pageNumber: %d", pageNumber);
         //TODO return HTTP error instead of exception
         checkArgument(pageNumber > 0, "Page number must be a positive number");
         Resources<T> elements = new Resources<T>();
         int startIndex = pageToIndex(pageNumber, DEFAULT_PAGE_SIZE);
-        elements.add(getRepository().get(startIndex, DEFAULT_PAGE_SIZE));
+        elements.add(findElements(startIndex, DEFAULT_PAGE_SIZE, includeFields));
         addSelfLinks(elements);
-        addPagingLinks(elements, pageNumber, DEFAULT_PAGE_SIZE, getRepository().size());
+        addPagingLinks(elements, pageNumber, DEFAULT_PAGE_SIZE, getRepository().size(), includeFields);
         return new ResponseEntity<Resources<T>>(elements, HttpStatus.OK);
+    }
+
+    /**
+     * Find elements
+     *
+     * @param startIndex    index of first element
+     * @param count         number of elements to be taken
+     * @param includeFields fields to be included
+     * @return non-nullable list
+     */
+    protected List<T> findElements(int startIndex, int count, String... includeFields) {
+        return getRepository().get(startIndex, count);
     }
 
     @ExceptionHandler(Exception.class)
@@ -77,18 +96,19 @@ public abstract class ReadService<T extends ResourceEntity> {
     /**
      * Add links needed for navigating through elements
      *
-     * @param elements where links should be added
-     * @param pageNumber current page
-     * @param pageSize number of elements displayed on single page
-     * @param maxCount total number of elements to be displayed
+     * @param elements      where links should be added
+     * @param pageNumber    current page
+     * @param pageSize      number of elements displayed on single page
+     * @param maxCount      total number of elements to be displayed
+     * @param includeFields fields to be included in results
      */
-    protected final void addPagingLinks(Resources<T> elements, int pageNumber, int pageSize, int maxCount) {
+    protected final void addPagingLinks(Resources<T> elements, int pageNumber, int pageSize, int maxCount, String... includeFields) {
         if (hasPreviousPage(pageNumber)) {
-            elements.add(linkTo(methodOn(ReadService.class).get(pageNumber - 1)).withRel("prev"));
+            elements.add(linkTo(methodOn(ReadService.class).get(pageNumber - 1, includeFields)).withRel("prev"));
         }
         elements.add(linkTo(methodOn(ReadService.class).get(pageNumber)).withSelfRel());
         if (hasNextPage(pageNumber, pageSize, maxCount)) {
-            elements.add(linkTo(methodOn(ReadService.class).get(pageNumber + 1)).withRel("next"));
+            elements.add(linkTo(methodOn(ReadService.class).get(pageNumber + 1, includeFields)).withRel("next"));
         }
     }
 

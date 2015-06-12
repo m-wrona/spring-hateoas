@@ -71,7 +71,7 @@ public abstract class ReadServiceTest<T extends ResourceEntity> {
         T element = sampleElement();
         when(mockRepository().find(eq(sampleElement().getEntityId()), (String[]) anyVararg())).thenReturn(element);
         //when searching element with chosen ID using service in chosen version
-        ResultActions result = mockMvc().perform(get("/messages/" + element.getEntityId()).accept(acceptVndVersion()));
+        ResultActions result = mockMvc().perform(get("/message/" + element.getEntityId()).accept(acceptVndVersion()));
         //then response is accepted
         result.andExpect(status().is(HttpStatus.OK.value()));
         //and response is in proper VND and version
@@ -90,7 +90,7 @@ public abstract class ReadServiceTest<T extends ResourceEntity> {
         when(mockRepository().get(eq(0), eq(ReadService.DEFAULT_PAGE_SIZE), (String[]) anyVararg())).thenReturn(elements);
         when(mockRepository().size()).thenReturn(elements.size());
         //when getting first page of elements using service in chosen version
-        ResultActions result = mockMvc().perform(get("/messages/list/1").accept(acceptVndVersion()));
+        ResultActions result = mockMvc().perform(get("/messages/1").accept(acceptVndVersion()));
         //then response is accepted
         result.andExpect(status().is(HttpStatus.OK.value()));
         //and response is in proper VND and version

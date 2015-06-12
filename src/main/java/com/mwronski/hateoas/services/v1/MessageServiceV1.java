@@ -3,6 +3,7 @@ package com.mwronski.hateoas.services.v1;
 import com.google.common.collect.Sets;
 import com.mwronski.hateoas.model.Message;
 import com.mwronski.hateoas.model.ResourceEntity;
+import com.mwronski.hateoas.model.Resources;
 import com.mwronski.hateoas.repositories.Repository;
 import com.mwronski.hateoas.services.ReadService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +16,10 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Set;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.mwronski.hateoas.log.Tracer.tracer;
 import static com.mwronski.hateoas.model.builder.Builders.message;
+import static com.mwronski.hateoas.services.ServiceUtils.pageToIndex;
 
 /**
  * Service manages messages kept in the application. <br/>
@@ -28,7 +31,7 @@ import static com.mwronski.hateoas.model.builder.Builders.message;
  * @version 1.0
  * @date 27-05-2014
  */
-@RequestMapping(value = "/messages", produces = "application/vnd.messages-v1+*",
+@RequestMapping(value = "/", produces = "application/vnd.messages-v1+*",
         headers = {"Accept=application/vnd.messages-v1+json", "Accept=application/vnd.messages-v1+xml"})
 @RestController
 public class MessageServiceV1 extends ReadService<Message> {
@@ -42,14 +45,17 @@ public class MessageServiceV1 extends ReadService<Message> {
      * Create message
      *
      * @param request with address of the sender
-     * @param title title of new message
+     * @param title   title of new message
      * @return ID of created message
      */
-    @RequestMapping(value = "/create", method = RequestMethod.POST)
+    @RequestMapping(value = "/message", method = RequestMethod.POST)
     @ResponseBody
     public HttpEntity<Message> create(HttpServletRequest request, @RequestParam String title) {
         tracer(this).info("Creating new message - title: %s", title);
-        Message msg = message().withTitle(title).withSender(request.getRemoteAddr()).build();
+        Message msg = message()
+                .withTitle(title)
+                .withSender(request.getRemoteAddr())
+                .build();
         msg = messageRepository.create(msg);
         Message msgId = messageRepository.find(msg.getEntityId(), ResourceEntity.COLUMN_ENTITY_ID);
         addSelfLink(msgId);

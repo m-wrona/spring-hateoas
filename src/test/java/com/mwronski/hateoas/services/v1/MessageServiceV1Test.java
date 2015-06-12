@@ -61,7 +61,7 @@ public class MessageServiceV1Test extends ReadServiceTest<Message> {
         Message message = sampleElement();
         when(mockRepository().find(eq(sampleElement().getEntityId()), (String[]) anyVararg())).thenReturn(message);
         //when searching element with chosen ID using service in chosen version
-        ResultActions result = mockMvc().perform(get("/messages/" + message.getEntityId()).accept(acceptVndVersion()).header("Accept", acceptVndVersion()));
+        ResultActions result = mockMvc().perform(get("/message/" + message.getEntityId()).accept(acceptVndVersion()).header("Accept", acceptVndVersion()));
         //then response is accepted
         result.andExpect(status().is(HttpStatus.OK.value()));
         //and response is in proper VND and version
@@ -73,7 +73,7 @@ public class MessageServiceV1Test extends ReadServiceTest<Message> {
         result.andExpect(jsonPath("$.sender").doesNotExist());
         //and self link is set properly
         result.andExpect(jsonPath("$.links[0].rel").value("self"));
-        result.andExpect(jsonPath("$.links[0].href").value("http://localhost/messages/" + message.getEntityId()));
+        result.andExpect(jsonPath("$.links[0].href").value("http://localhost/message/" + message.getEntityId()));
         //and data is taken from repository
         verify(mockRepository(), atLeastOnce()).find(eq(sampleElement().getEntityId()), (String[]) anyVararg());
         verifyNoMoreInteractions(mockRepository());
@@ -88,7 +88,7 @@ public class MessageServiceV1Test extends ReadServiceTest<Message> {
         when(mockRepository().get(eq(0), eq(10), (String[]) anyVararg())).thenReturn(elements);
         when(mockRepository().size()).thenReturn(elements.size());
         //when getting first page of elements using service in chosen version
-        ResultActions result = mockMvc().perform(get("/messages/list/1").accept(acceptVndVersion()));
+        ResultActions result = mockMvc().perform(get("/messages/1").accept(acceptVndVersion()));
         //then response is accepted
         result.andExpect(status().is(HttpStatus.OK.value()));
         //and response is in proper VND and version
@@ -100,10 +100,10 @@ public class MessageServiceV1Test extends ReadServiceTest<Message> {
         result.andExpect(jsonPath("$.resources[0].sender").doesNotExist());
         //and self link of message is set properly
         result.andExpect(jsonPath("$.resources[0].links[0].rel").value("self"));
-        result.andExpect(jsonPath("$.resources[0].links[0].href").value("http://localhost/messages/" + message.getEntityId()));
+        result.andExpect(jsonPath("$.resources[0].links[0].href").value("http://localhost/message/" + message.getEntityId()));
         //and links for paging are set properly
         result.andExpect(jsonPath("$.links[0].rel").value("self"));
-        result.andExpect(jsonPath("$.links[0].href").value("http://localhost/messages/list/1"));
+        result.andExpect(jsonPath("$.links[0].href").value("http://localhost/messages/1?includeFields="));
         //and data is taken from repository
         verify(mockRepository(), atLeastOnce()).get(eq(0), eq(10), (String[]) anyVararg());
         verify(mockRepository(), atLeastOnce()).size();
@@ -119,7 +119,7 @@ public class MessageServiceV1Test extends ReadServiceTest<Message> {
         msgId.setEntityId(message.getEntityId());
         when(mockRepository.find(message.getEntityId(), ResourceEntity.COLUMN_ENTITY_ID)).thenReturn(msgId);
         //when creating message using service in chosen version
-        ResultActions result = mockMvc().perform(post("/messages/create").accept(acceptVndVersion()).param("title", message.getTitle()));
+        ResultActions result = mockMvc().perform(post("/message").accept(acceptVndVersion()).param("title", message.getTitle()));
         //then message is created
         result.andExpect(status().is(HttpStatus.CREATED.value()));
         //and response is in proper VND and version
@@ -131,7 +131,7 @@ public class MessageServiceV1Test extends ReadServiceTest<Message> {
         result.andExpect(jsonPath("$.sender").doesNotExist());
         //and self link of created message is set properly
         result.andExpect(jsonPath("$.links[0].rel").value("self"));
-        result.andExpect(jsonPath("$.links[0].href").value("http://localhost/messages/" + message.getEntityId()));
+        result.andExpect(jsonPath("$.links[0].href").value("http://localhost/message/" + message.getEntityId()));
         //and data is created using repository
         verify(mockRepository(), atLeastOnce()).create(any(Message.class));
         verify(mockRepository(), atLeastOnce()).find(message.getEntityId(), ResourceEntity.COLUMN_ENTITY_ID);
